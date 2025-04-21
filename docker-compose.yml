@@ -10,6 +10,8 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - elasticsearch
+    networks:
+      - logify-network
 
   product:
     build: 
@@ -22,6 +24,8 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - elasticsearch
+    networks:
+      - logify-network
 
   order:
     build: 
@@ -34,6 +38,8 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - elasticsearch
+    networks:
+      - logify-network
 
   payment:
     build: 
@@ -46,6 +52,8 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - elasticsearch
+    networks:
+      - logify-network
 
   notification:
     build: 
@@ -58,6 +66,8 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - elasticsearch
+    networks:
+      - logify-network
 
   traffic-bot:
     build: 
@@ -71,25 +81,56 @@ services:
       - order
       - payment
       - notification
+    networks:
+      - logify-network
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.3
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
+    restart: always
     volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.9.3
-    ports:
-      - "5601:5601"
+      - elastic_data:/usr/share/elasticsearch/data/
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false  # Disable security for local development
+      - ES_JAVA_OPTS=-Xmx256m -Xms256m
+      - discovery.type=single-node
+    ports:
+      - '9200:9200'
+    networks:
+      - logify-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.0.0
+    container_name: logstash
+    restart: always
+    volumes:
+      - ./logstash/:/logstash_dir
+    command: logstash -f /logstash_dir/pipeline/logstash.conf
     depends_on:
       - elasticsearch
+    ports:
+      - '5044:5044'
+    environment:
+      - LS_JAVA_OPTS=-Xmx256m -Xms256m
+    networks:
+      - logify-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    restart: always
+    ports:
+      - '5601:5601'
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - logify-network
 
 volumes:
-  elasticsearch-data: 
+  elastic_data: {}
+
+networks:
+  logify-network:
+    driver: bridge 
