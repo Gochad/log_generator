@@ -1,136 +1,43 @@
 services:
-  user:
-    build: 
-      context: ./services/user
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=development
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - logify-network
-
-  product:
-    build: 
-      context: ./services/product
-      dockerfile: Dockerfile
-    ports:
-      - "3002:3002"
-    environment:
-      - NODE_ENV=development
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - logify-network
-
-  order:
-    build: 
-      context: ./services/order
-      dockerfile: Dockerfile
-    ports:
-      - "3003:3003"
-    environment:
-      - NODE_ENV=development
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - logify-network
-
-  payment:
-    build: 
-      context: ./services/payment
-      dockerfile: Dockerfile
-    ports:
-      - "3004:3004"
-    environment:
-      - NODE_ENV=development
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - logify-network
-
-  notification:
-    build: 
-      context: ./services/notification
-      dockerfile: Dockerfile
-    ports:
-      - "3005:3005"
-    environment:
-      - NODE_ENV=development
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - logify-network
-
-  traffic-bot:
-    build: 
-      context: ./services/traffic-bot
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - user
-      - product
-      - order
-      - payment
-      - notification
-    networks:
-      - logify-network
-
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
     container_name: elasticsearch
-    restart: always
-    volumes:
-      - elastic_data:/usr/share/elasticsearch/data/
     environment:
-      - xpack.security.enabled=false  # Disable security for local development
-      - ES_JAVA_OPTS=-Xmx256m -Xms256m
       - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
-      - '9200:9200'
-    networks:
-      - logify-network
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
 
   logstash:
     image: docker.elastic.co/logstash/logstash:9.0.0
     container_name: logstash
-    restart: always
+    ports:
+      - "5020:5020"
     volumes:
-      - ./logstash/:/logstash_dir
-    command: logstash -f /logstash_dir/pipeline/logstash.conf
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     depends_on:
       - elasticsearch
-    ports:
-      - '5044:5044'
-    environment:
-      - LS_JAVA_OPTS=-Xmx256m -Xms256m
-    networks:
-      - logify-network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:9.0.0
     container_name: kibana
-    restart: always
     ports:
-      - '5601:5601'
+      - "5601:5601"
     environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
       - elasticsearch
-    networks:
-      - logify-network
+
+  go-app:
+    build: .
+    container_name: go-app
+    depends_on:
+      - logstash
+    environment:
+      - LOGSTASH_HOST=logstash:5020
 
 volumes:
-  elastic_data: {}
-
-networks:
-  logify-network:
-    driver: bridge 
+  esdata:
