@@ -4,7 +4,6 @@ import (
 	"go-logger/utils"
 	"math/rand"
 	"net"
-	"strconv"
 	"time"
 )
 
@@ -76,22 +75,4 @@ func SimulateUserService(conn net.Conn) {
 
 		time.Sleep(time.Duration(rand.Intn(2000)+500) * time.Millisecond)
 	}
-}
-
-func generateIDs(count int) []string {
-	ids := make([]string, count)
-	for i := 0; i < count; i++ {
-		ids[i] = "user_" + strconv.Itoa(10000+i)
-	}
-	return ids
-}
-
-func generateUserAgent() string {
-	devices := []string{
-		"Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)",
-		"Mozilla/5.0 (Linux; Android 12; SM-G991B)",
-		"Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 12_0)",
-	}
-	return devices[rand.Intn(len(devices))]
 }
