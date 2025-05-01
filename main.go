@@ -14,9 +14,9 @@ func main() {
 	defer conn.Close()
 
 	go services.SimulateUserService(conn)
-	// go services.SimulateOrderService(conn)
-	// go services.SimulateProductService(conn)
-	// go services.SimulatePaymentService(conn)
+	go services.SimulateOrderService(conn)
+	go services.SimulateProductService(conn)
+	go services.SimulatePaymentService(conn)
 
 	select {}
 }
