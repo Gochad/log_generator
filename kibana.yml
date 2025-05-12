@@ -1,0 +1,13 @@
+server.host: "0.0.0.0"
+elasticsearch.hosts: [ "http://elasticsearch:9200" ] # needed
+
+xpack.encryptedSavedObjects.encryptionKey: df95724536851ff668b0721d6b4c9dff
+xpack.reporting.encryptionKey: 53b9e8776abf8f28267486a16aee9036
+xpack.security.encryptionKey: 3494d8836648eb963a0f59716562152c
+
+# token generation:
+#
+# docker ps               --- check container id
+# docker exec -it <container_id> /bin/bash
+# bin/kibana-encryption-keys generate
+# docker-compose restart kibana

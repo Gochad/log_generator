@@ -23,7 +23,7 @@ func InitLogstashConnection() net.Conn {
 	var conn net.Conn
 	var err error
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		conn, err = net.Dial("tcp", logstashAddr)
 		if err == nil {
 			log.Println("Successfully connected to Logstash")

@@ -90,7 +90,7 @@ func SimulateOrderService(conn net.Conn) {
 
 func generateOrderIDs(count int) []string {
 	ids := make([]string, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		ids[i] = "order_" + strconv.Itoa(10000+i)
 	}
 	return ids
